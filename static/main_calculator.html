@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raw Material Calculator</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 420px;
+      margin: auto;
+      padding: 16px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      font-size: 16px;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Notebook Raw Material Calculator</h2>
+
+<label>Product Category</label>
+<select name="category" id="category" onchange="onCategoryChange()">
+  <option value="">-- Select product --</option>
+  <option value="spiral">Spiral Notebook</option>
+  <option value="school">School Notebook</option>
+</select>
+
+<div id="spiralInputs" style="display: none;">
+  <h3>Spiral Notebook Details</h3>
+
+  <label>Number of notebooks</label>
+  <input type="number" id="spiral_number">
+
+  <label>Notebook size</label>
+  <select name="size" id="spiral_size">
+    <option value="">-- Select size --</option>
+    <option value="A5">A5</option>
+    <option value="B5">B5</option>
+    <option value="A4">A4</option>
+  </select>
+
+  <label>Sheets per notebook</label>
+  <select name="sheets" id="spiral_sheets">
+    <option value="">-- Select number of sheets --</option>
+    <option value=60>60</option>
+    <option value=72>72</option>
+    <option value=80>80</option>
+    <option value=120>120</option>
+    <option value=160>160</option>
+    <option value=180>180</option>
+    <option value=200>200</option>
+  </select>
+
+  <label>Paper GSM</label>
+  <select name="GSM" id="spiral_GSM">
+    <option value="">-- Select GSM --</option>
+    <option value=55>55</option>
+    <option value=70>70</option>
+    <option value=80>80</option>
+  </select>
+</div>
+
+<div id="schoolInputs" style="display: none;">
+  <h3>School Notebook Details</h3>
+
+  <label>Number of boxes</label>
+  <input type="number" id="school_number">
+
+  <label>Notebook size</label>
+  <select name="size" id="school_size">
+    <option value="">-- Select size --</option>
+    <option value="198X148">198X148</option>
+    <option value="A5">A5</option>
+    <option value="B5">B5</option>
+    <option value="A4">A4</option>
+  </select>
+
+  <label>Notebook cover</label>
+  <select name="size" id="school_cover">
+    <option value="">-- Select cover material --</option>
+    <option value="cardboard">Cardboard</option>
+    <option value="pp">PP</option>
+  </select>
+
+  <label>Sheets per notebook</label>
+  <select name="sheets" id="school_sheets">
+    <option value="">-- Select number of sheets --</option>
+    <option value=32>32</option>
+    <option value=40>40</option>
+    <option value=60>60</option>
+    <option value=64>64</option>
+    <option value=72>72</option>
+    <option value=96>96</option>
+  </select>
+
+  <label>Paper GSM</label>
+  <select name="GSM" id="school_GSM">
+    <option value="">-- Select GSM --</option>
+    <option value=55>55</option>
+    <option value=70>70</option>
+    <option value=80>80</option>
+  </select>
+</div>
+
+
+<button onclick="calculate()">Calculate</button>
+
+<div id="resultDiv"></div>
+
+<script>
+
+function onCategoryChange() {
+  const category = document.getElementById("category").value;
+
+  document.getElementById("spiralInputs").style.display = "none";
+  document.getElementById("schoolInputs").style.display = "none";
+
+  if (category === "spiral") {
+    document.getElementById("spiralInputs").style.display = "block";
+  } else if (category === "school") {
+    document.getElementById("schoolInputs").style.display = "block";
+  }
+}
+
+async function calculate() {
+
+  const category = document.getElementById("category").value;
+
+  if (!category) {
+    alert("Please select a product category");
+    return;
+  }
+
+  let payload = { category };
+
+  if (category === "spiral") {
+    payload.data = {
+      number: Number(spiral_number.value),
+      size: spiral_size.value,
+      sheets: Number(spiral_sheets.value),
+      gsm: Number(spiral_GSM.value)
+    };
+  }
+
+  if (category === "school") {
+    payload.data = {
+      boxes: Number(school_number.value),
+      size: school_size.value,
+      cover: school_cover.value,
+      sheets: Number(school_sheets.value),
+      gsm: Number(school_GSM.value)
+    };
+  }
+
+  console.log("Payload being sent:", payload);
+
+  // const API_BASE_URL = "http://localhost:8000";
+
+  /*const response = await fetch(`${API_BASE_URL}/calculate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });*/
+
+  const API_BASE_URL = "https://notebook-calculator.onrender.com";
+
+  const response = await fetch(`${API_BASE_URL}/calculate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    resultDiv.innerText = "Invalid input. Please check values.";
+    return;
+  }
+
+  const resultData = await response.json();
+
+  console.log(resultData);
+
+  let output = "";
+
+  for (const key in resultData) {
+    output += key.replace(/_/g, " ") + ": " + resultData[key] + "\n";
+  }
+
+  resultDiv.innerText = output;
+
+  /*resultDiv.innerText =
+  "Product: " + resultData.product + "\n" +
+  "Finished paper weight: " + resultData.paper_weight_kg + " kg\n" +
+  "Raw paper required: " + resultData.raw_paper_weight_kg + " kg";*/
+}
+</script>
+
+</body>
+</html>
